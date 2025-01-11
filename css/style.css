@@ -49,7 +49,7 @@ nav {
 }
 
 .dp{
-    background-image: url("/pics/portfolio-logo.jpg");
+    background-image: url("/portfolio/pics/portfolio-logo.jpg");
     background-size: cover;
     width: 55px;
     height: 55px;
@@ -100,7 +100,7 @@ nav li a:hover {
 }
 
 .image {
-    background-image: url("/pics/for\ dps\ -\ Copy.png");
+    background-image: url("/portfolio/pics/for\ dps\ -\ Copy.png");
     background-size: cover;
     width: 100%;
     height: 100%;
