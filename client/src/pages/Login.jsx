@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
+import axios from 'axios'
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -23,22 +24,46 @@ function Login() {
     setIsLoading(true)
     setError('')
 
-    // Get stored admin credentials
-    const storedAdmin = localStorage.getItem('adminCredentials')
-    
-    if (storedAdmin) {
-      const admin = JSON.parse(storedAdmin)
-      
-      if (formData.email === admin.email && formData.password === admin.password) {
-        // Set admin session
-        localStorage.setItem('adminLoggedIn', 'true')
-        localStorage.setItem('adminEmail', admin.email)
-        navigate('/admin')
-      } else {
-        setError('Invalid email or password')
+    // Input validation
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.post(
+        'http://localhost:5000/admin/login',
+        {
+          Email: formData.email,
+          Password: formData.password
+        },
+        {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      if (response.data.success) {
+        // Store JWT token and admin data
+        localStorage.setItem('adminToken', response.data.data.token);
+        localStorage.setItem('adminData', JSON.stringify(response.data.data.admin));
+        
+        console.log('Login successful:', response.data);
+        
+        // Redirect to admin dashboard
+        navigate('/admin');
       }
-    } else {
-      setError('No admin account found. Please register first.')
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error.response?.data?.msg) {
+        setError(error.response.data.msg);
+      } else {
+        setError('Login failed. Please try again.');
+      }
     }
 
     setIsLoading(false)

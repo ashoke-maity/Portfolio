@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
+import axios from 'axios';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -9,10 +10,10 @@ function Register() {
     password: '',
     confirmPassword: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -26,14 +27,6 @@ function Register() {
     setIsLoading(true)
     setError('')
     setSuccess('')
-
-    // Check if admin already exists
-    const existingAdmin = localStorage.getItem('adminCredentials')
-    if (existingAdmin) {
-      setError('Admin account already exists. Please login instead.')
-      setIsLoading(false)
-      return
-    }
 
     // Validate password match
     if (formData.password !== formData.confirmPassword) {
@@ -49,24 +42,41 @@ function Register() {
       return
     }
 
-    // Create admin account
-    const adminData = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      createdAt: new Date().toISOString()
-    }
-
     try {
-      localStorage.setItem('adminCredentials', JSON.stringify(adminData))
-      setSuccess('Admin account created successfully! Redirecting to login...')
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login')
-      }, 2000)
+      const token = localStorage.getItem('adminToken');
+          const response = await axios.post(
+            'http://localhost:5000/admin/register',
+            {
+              FullName: formData.name,
+              Email: formData.email,
+              Password: formData.password
+            },
+            {
+              headers: {
+                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json',
+              }
+            }
+          );
+
+      if (response.data.success) {
+        // Store JWT token in localStorage
+        localStorage.setItem('adminToken', response.data.data.token);
+        localStorage.setItem('adminData', JSON.stringify(response.data.data.admin));
+        
+        setSuccess('Admin account created successfully! Redirecting to dashboard...');
+        
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
+      }
     } catch (error) {
-      setError('Failed to create admin account. Please try again.')
+      console.error('Registration error:', error);
+      if (error.response?.data?.msg) {
+        setError(error.response.data.msg);
+      } else {
+        setError('Failed to create admin account. Please try again.');
+      }
     }
 
     setIsLoading(false)
