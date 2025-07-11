@@ -5,10 +5,9 @@ import About from '../pages/About'
 import Projects from '../pages/Projects'
 import Admin from '../pages/Admin'
 import Login from '../pages/Login'
-import Register from '../pages/Register'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-// Removed ProtectedRoute import since the file is deleted
+import ProtectedRoute from '../components/ProtectedRoute'
 function App() {
   return (
     <Router>
@@ -43,9 +42,10 @@ function App() {
           } />
 
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/admin" element={
+            <ProtectedRoute>
               <Admin />
+            </ProtectedRoute>
           } />
         </Routes>
       </div>

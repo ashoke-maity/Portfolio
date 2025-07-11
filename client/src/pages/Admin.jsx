@@ -162,6 +162,8 @@ function Admin() {
   }
 
   const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('adminData')
     localStorage.removeItem('adminLoggedIn')
     localStorage.removeItem('adminEmail')
     navigate('/login')

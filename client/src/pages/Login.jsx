@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
@@ -11,6 +11,17 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const adminData = localStorage.getItem('adminData')
+    
+    if (token && adminData) {
+      // User is already logged in, redirect to admin
+      navigate('/admin')
+    }
+  }, [navigate])
 
   const handleChange = (e) => {
     setFormData({
@@ -32,16 +43,14 @@ function Login() {
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await axios.post(
-        'http://localhost:5000/admin/login',
+        `${import.meta.env.VITE_ADMIN_ROUTE}/login`,
         {
           Email: formData.email,
           Password: formData.password
         },
         {
           headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
             'Content-Type': 'application/json',
           }
         }
@@ -49,10 +58,8 @@ function Login() {
 
       if (response.data.success) {
         // Store JWT token and admin data
-        localStorage.setItem('adminToken', response.data.data.token);
+        localStorage.setItem('token', response.data.data.token);
         localStorage.setItem('adminData', JSON.stringify(response.data.data.admin));
-        
-        console.log('Login successful:', response.data);
         
         // Redirect to admin dashboard
         navigate('/admin');
@@ -82,7 +89,7 @@ function Login() {
             Admin Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
-            Sign in to access the admin panel
+            Login to access the admin panel
           </p>
         </div>
 
@@ -145,15 +152,6 @@ function Login() {
                 'Sign In'
               )}
             </button>
-          </div>
-
-          <div className="text-center">
-            <Link
-              to="/register"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Don't have an account? Register here
-            </Link>
           </div>
 
           <div className="text-center">
