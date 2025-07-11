@@ -2,6 +2,367 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+// Dashboard Component - moved outside to prevent re-creation
+function Dashboard({ visitorCount, projects, loading }) {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Dashboard Overview</h2>
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <div className="flex items-center">
+            <div className="p-3 bg-blue-900 rounded-lg">
+              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-400">Total Visitors</p>
+              <p className="text-2xl font-bold text-white">{visitorCount}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <div className="flex items-center">
+            <div className="p-3 bg-green-900 rounded-lg">
+              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-400">Total Projects</p>
+              <p className="text-2xl font-bold text-white">{projects.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <div className="flex items-center">
+            <div className="p-3 bg-purple-900 rounded-lg">
+              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-400">Active Projects</p>
+              <p className="text-2xl font-bold text-white">{projects.filter(p => p.status === 'ongoing').length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Projects */}
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 className="text-lg font-semibold text-white mb-4">Recent Projects</h3>
+        
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-400 mt-4">Loading projects...</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-400">No projects found. Create your first project!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {projects.slice(0, 3).map((project) => (
+              <div key={project._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-900 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-white">{project.title}</h4>
+                    <p className="text-sm text-gray-400">{project.description.substring(0, 50)}...</p>
+                  </div>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  project.status === 'completed' 
+                    ? 'bg-green-900 text-green-300' 
+                    : 'bg-yellow-900 text-yellow-300'
+                }`}>
+                  {project.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ProjectManagement Component - moved outside to prevent re-creation
+function ProjectManagement({ 
+  projects, 
+  loading, 
+  error, 
+  newProject, 
+  setNewProject,
+  techInput, 
+  setTechInput,
+  featureInput, 
+  setFeatureInput,
+  editingProject, 
+  setEditingProject,
+  handleSubmitProject, 
+  handleAddTechnology, 
+  handleRemoveTechnology, 
+  handleAddFeature, 
+  handleRemoveFeature, 
+  handleThumbnailChange, 
+  handleUpdateProject, 
+  handleDeleteProject 
+}) {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Project Management</h2>
+      
+      {/* Add New Project Form */}
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 className="text-lg font-semibold text-white mb-4">Add New Project</h3>
+        <form onSubmit={handleSubmitProject} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Project Title *</label>
+              <input
+                type="text"
+                value={newProject.title}
+                onChange={(e) => setNewProject({...newProject, title: e.target.value})}
+                required
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter project title"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+              <select
+                value={newProject.status}
+                onChange={(e) => setNewProject({...newProject, status: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
+            <textarea
+              value={newProject.description}
+              onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+              required
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              placeholder="Enter project description"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">GitHub URL</label>
+              <input
+                type="url"
+                value={newProject.githubUrl}
+                onChange={(e) => setNewProject({...newProject, githubUrl: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://github.com/username/repo"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Live URL</label>
+              <input
+                type="url"
+                value={newProject.liveUrl}
+                onChange={(e) => setNewProject({...newProject, liveUrl: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://your-project.com"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Project Thumbnail</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailChange}
+              className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+            />
+            {newProject.imageUrl && (
+              <div className="mt-2">
+                <img src={newProject.imageUrl} alt="Preview" className="w-20 h-20 object-cover rounded" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Technologies</label>
+            <div className="flex space-x-2 mb-3">
+              <input
+                type="text"
+                value={techInput}
+                onChange={(e) => setTechInput(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Add technology"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTechnology())}
+              />
+              <button
+                type="button"
+                onClick={handleAddTechnology}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {newProject.technologies.map((tech, index) => (
+                <span key={index} className="px-3 py-1 bg-blue-900 text-blue-300 text-sm rounded-full flex items-center">
+                  {tech}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTechnology(index)}
+                    className="ml-2 text-blue-400 hover:text-red-400"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Features</label>
+            <div className="flex space-x-2 mb-3">
+              <input
+                type="text"
+                value={featureInput}
+                onChange={(e) => setFeatureInput(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Add feature"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFeature())}
+              />
+              <button
+                type="button"
+                onClick={handleAddFeature}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {newProject.features.map((feature, index) => (
+                <span key={index} className="px-3 py-1 bg-green-900 text-green-300 text-sm rounded-full flex items-center">
+                  {feature}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(index)}
+                    className="ml-2 text-green-400 hover:text-red-400"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Creating Project...' : 'Create Project'}
+          </button>
+        </form>
+      </div>
+
+      {/* Existing Projects */}
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 className="text-lg font-semibold text-white mb-4">Existing Projects</h3>
+        
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-400 mt-4">Loading projects...</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-400">No projects found. Create your first project!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {projects.map((project) => (
+              <div key={project._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-900 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-white">{project.title}</h4>
+                    <p className="text-sm text-gray-400">{project.description.substring(0, 50)}...</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    project.status === 'completed' 
+                      ? 'bg-green-900 text-green-300' 
+                      : 'bg-yellow-900 text-yellow-300'
+                  }`}>
+                    {project.status}
+                  </span>
+                  <button
+                    onClick={() => { setEditingProject(project); setEditForm({ ...project }); }}
+                    className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProject(project._id)}
+                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Edit Project Modal */}
+      {editingProject && editForm && (
+        <EditProjectModal
+          project={editingProject}
+          loading={loading}
+          onClose={() => { setEditingProject(null); setEditForm(null); }}
+          onUpdate={handleUpdateProject}
+        />
+      )}
+    </div>
+  )
+}
+
 function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [visitorCount, setVisitorCount] = useState(0)
@@ -11,6 +372,8 @@ function Admin() {
   const [error, setError] = useState('')
   const [initializing, setInitializing] = useState(true)
   const [criticalError, setCriticalError] = useState(null)
+  const [editingProject, setEditingProject] = useState(null)
+  const [editForm, setEditForm] = useState(null)
   const navigate = useNavigate()
 
   // Get admin route from environment variable
@@ -179,19 +542,19 @@ function Admin() {
       setLoading(false)
     }
   }
-  const [newProject, setNewProject] = useState({
+  const initialProjectState = {
     title: '',
     description: '',
     imageUrl: '',
-    status: 'Completed',
+    status: 'ongoing',
     technologies: [],
     features: [],
     githubUrl: '',
     liveUrl: ''
-  })
+  };
+  const [newProject, setNewProject] = useState(initialProjectState);
   const [techInput, setTechInput] = useState('')
   const [featureInput, setFeatureInput] = useState('')
-  const [editingProject, setEditingProject] = useState(null)
 
   // Simulate visitor count increment
   useEffect(() => {
@@ -219,51 +582,51 @@ function Admin() {
 
   const handleAddTechnology = () => {
     if (techInput.trim()) {
-      setNewProject({
-        ...newProject,
-        technologies: [...newProject.technologies, techInput.trim()]
-      })
-      setTechInput('')
+      setNewProject(prev => ({
+        ...prev,
+        technologies: [...prev.technologies, techInput.trim()]
+      }));
+      setTechInput('');
     }
   }
 
   const handleRemoveTechnology = (index) => {
-    setNewProject({
-      ...newProject,
-      technologies: newProject.technologies.filter((_, i) => i !== index)
-    })
+    setNewProject(prev => ({
+      ...prev,
+      technologies: prev.technologies.filter((_, i) => i !== index)
+    }));
   }
 
   const handleAddFeature = () => {
     if (featureInput.trim()) {
-      setNewProject({
-        ...newProject,
-        features: [...newProject.features, featureInput.trim()]
-      })
-      setFeatureInput('')
+      setNewProject(prev => ({
+        ...prev,
+        features: [...prev.features, featureInput.trim()]
+      }));
+      setFeatureInput('');
     }
   }
 
   const handleRemoveFeature = (index) => {
-    setNewProject({
-      ...newProject,
-      features: newProject.features.filter((_, i) => i !== index)
-    })
+    setNewProject(prev => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index)
+    }));
   }
 
   const handleThumbnailChange = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        setNewProject({
-          ...newProject,
+        setNewProject(prev => ({
+          ...prev,
           imageUrl: e.target.result
-        })
-      }
-      reader.readAsDataURL(file)
+        }));
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleSubmitProject = async (e) => {
     e.preventDefault()
@@ -332,6 +695,7 @@ function Admin() {
         fetchProjects()
         setError('')
         setEditingProject(null)
+        setEditForm(null)
       } else {
         setError(response.data.msg || 'Failed to update project')
       }
@@ -465,358 +829,6 @@ function Admin() {
       </div>
     </div>
   )
-
-  const ProjectManagement = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Project Management</h2>
-      
-      {/* Add New Project Form */}
-      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Add New Project</h3>
-        <form onSubmit={handleSubmitProject} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Project Title *</label>
-              <input
-                type="text"
-                value={newProject.title}
-                onChange={(e) => setNewProject({...newProject, title: e.target.value})}
-                required
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter project title"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
-              <select
-                value={newProject.status}
-                onChange={(e) => setNewProject({...newProject, status: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="ongoing">Ongoing</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
-            <textarea
-              value={newProject.description}
-              onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-              required
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Enter project description"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">GitHub URL</label>
-              <input
-                type="url"
-                value={newProject.githubUrl}
-                onChange={(e) => setNewProject({...newProject, githubUrl: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://github.com/username/project"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Live Demo URL</label>
-              <input
-                type="url"
-                value={newProject.liveUrl}
-                onChange={(e) => setNewProject({...newProject, liveUrl: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://your-project.com"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Thumbnail Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailChange}
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            {newProject.imageUrl && (
-              <div className="mt-2">
-                <img src={newProject.imageUrl} alt="Thumbnail preview" className="w-32 h-32 object-cover rounded-lg" />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Technologies</label>
-            <div className="flex space-x-2 mb-2">
-              <input
-                type="text"
-                value={techInput}
-                onChange={(e) => setTechInput(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Add technology"
-              />
-              <button
-                type="button"
-                onClick={handleAddTechnology}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Add
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {newProject.technologies.map((tech, index) => (
-                <span key={index} className="px-3 py-1 bg-blue-900 text-blue-300 text-sm rounded-full flex items-center">
-                  {tech}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTechnology(index)}
-                    className="ml-2 text-blue-400 hover:text-blue-200"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Features</label>
-            <div className="flex space-x-2 mb-2">
-              <input
-                type="text"
-                value={featureInput}
-                onChange={(e) => setFeatureInput(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Add feature"
-              />
-              <button
-                type="button"
-                onClick={handleAddFeature}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Add
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {newProject.features.map((feature, index) => (
-                <span key={index} className="px-3 py-1 bg-green-900 text-green-300 text-sm rounded-full flex items-center">
-                  {feature}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFeature(index)}
-                    className="ml-2 text-green-400 hover:text-green-200"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-900 border border-red-700 rounded-lg">
-              <div className="text-red-300 text-sm">{error}</div>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
-              loading 
-                ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {loading ? 'Adding Project...' : 'Add Project'}
-          </button>
-        </form>
-      </div>
-
-      {/* Existing Projects */}
-      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Existing Projects</h3>
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="text-gray-400">Loading projects...</div>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-gray-400">No projects found. Create your first project above!</div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {projects.map((project) => (
-              <div key={project._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  {project.imageUrl ? (
-                    <img src={project.imageUrl} alt={project.title} className="w-12 h-12 object-cover rounded-lg" />
-                  ) : (
-                    <div className="text-2xl">💻</div>
-                  )}
-                  <div>
-                    <h4 className="text-white font-medium">{project.title}</h4>
-                    <p className="text-gray-400 text-sm">
-                      {project.status} • {project.technologies ? project.technologies.length : 0} technologies
-                    </p>
-                    <div className="flex space-x-2 mt-1">
-                      {project.githubUrl && (
-                        <a 
-                          href={project.githubUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-400 hover:text-blue-300"
-                        >
-                          GitHub
-                        </a>
-                      )}
-                      {project.liveUrl && (
-                        <a 
-                          href={project.liveUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs text-green-400 hover:text-green-300"
-                        >
-                          Live Demo
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setEditingProject(project)}
-                    disabled={loading}
-                    className={`px-3 py-1 rounded-lg transition-colors text-sm ${
-                      loading 
-                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
-                        : 'bg-yellow-600 text-white hover:bg-yellow-700'
-                    }`}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProject(project._id)}
-                    disabled={loading}
-                    className={`px-3 py-1 rounded-lg transition-colors text-sm ${
-                      loading 
-                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
-                        : 'bg-red-600 text-white hover:bg-red-700'
-                    }`}
-                  >
-                    {loading ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Edit Project Modal */}
-      {editingProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-white mb-4">Edit Project</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault()
-              handleUpdateProject(editingProject._id, {
-                title: editingProject.title,
-                description: editingProject.description,
-                imageUrl: editingProject.imageUrl,
-                githubUrl: editingProject.githubUrl,
-                liveUrl: editingProject.liveUrl,
-                status: editingProject.status,
-                technologies: editingProject.technologies || [],
-                features: editingProject.features || []
-              })
-            }} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Project Title</label>
-                <input
-                  type="text"
-                  value={editingProject.title}
-                  onChange={(e) => setEditingProject({...editingProject, title: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                <textarea
-                  value={editingProject.description}
-                  onChange={(e) => setEditingProject({...editingProject, description: e.target.value})}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
-                  <select
-                    value={editingProject.status}
-                    onChange={(e) => setEditingProject({...editingProject, status: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="ongoing">Ongoing</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">GitHub URL</label>
-                  <input
-                    type="url"
-                    value={editingProject.githubUrl || ''}
-                    onChange={(e) => setEditingProject({...editingProject, githubUrl: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Live URL</label>
-                <input
-                  type="url"
-                  value={editingProject.liveUrl || ''}
-                  onChange={(e) => setEditingProject({...editingProject, liveUrl: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex space-x-3">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                    loading 
-                      ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {loading ? 'Updating...' : 'Update Project'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingProject(null)}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-
   // Show critical error screen
   if (criticalError) {
     return (
@@ -902,8 +914,36 @@ function Admin() {
           </div>
 
           {/* Content */}
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'projects' && <ProjectManagement />}
+          {activeTab === 'dashboard' && (
+            <Dashboard 
+              visitorCount={visitorCount} 
+              projects={projects} 
+              loading={loading} 
+            />
+          )}
+          {activeTab === 'projects' && (
+            <ProjectManagement 
+              projects={projects}
+              loading={loading}
+              error={error}
+              newProject={newProject}
+              setNewProject={setNewProject}
+              techInput={techInput}
+              setTechInput={setTechInput}
+              featureInput={featureInput}
+              setFeatureInput={setFeatureInput}
+              editingProject={editingProject}
+              setEditingProject={setEditingProject}
+              handleSubmitProject={handleSubmitProject}
+              handleAddTechnology={handleAddTechnology}
+              handleRemoveTechnology={handleRemoveTechnology}
+              handleAddFeature={handleAddFeature}
+              handleRemoveFeature={handleRemoveFeature}
+              handleThumbnailChange={handleThumbnailChange}
+              handleUpdateProject={handleUpdateProject}
+              handleDeleteProject={handleDeleteProject}
+            />
+          )}
         </div>
       </div>
     )
@@ -925,6 +965,240 @@ function Admin() {
       </div>
     )
   }
+}
+
+function EditProjectModal({ project, loading, onClose, onUpdate }) {
+  const [form, setForm] = useState(() => ({
+    title: project.title || '',
+    description: project.description || '',
+    imageUrl: project.imageUrl || '',
+    githubUrl: project.githubUrl || '',
+    liveUrl: project.liveUrl || '',
+    status: project.status || 'ongoing',
+    technologies: Array.isArray(project.technologies) ? [...project.technologies] : [],
+    features: Array.isArray(project.features) ? [...project.features] : [],
+  }));
+  const [techInput, setTechInput] = useState('');
+  const [featureInput, setFeatureInput] = useState('');
+  const [error, setError] = useState('');
+
+  const handleAddTechnology = () => {
+    if (techInput.trim() && !form.technologies.includes(techInput.trim())) {
+      setForm(f => ({ ...f, technologies: [...f.technologies, techInput.trim()] }));
+      setTechInput('');
+    }
+  };
+  const handleRemoveTechnology = (index) => {
+    setForm(f => ({ ...f, technologies: f.technologies.filter((_, i) => i !== index) }));
+  };
+  const handleAddFeature = () => {
+    if (featureInput.trim() && !form.features.includes(featureInput.trim())) {
+      setForm(f => ({ ...f, features: [...f.features, featureInput.trim()] }));
+      setFeatureInput('');
+    }
+  };
+  const handleRemoveFeature = (index) => {
+    setForm(f => ({ ...f, features: f.features.filter((_, i) => i !== index) }));
+  };
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setForm(f => ({ ...f, imageUrl: e.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.title.trim() || !form.description.trim()) {
+      setError('Project title and description are required.');
+      return;
+    }
+    setError('');
+    onUpdate(project._id, { ...form });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-2xl p-8 border border-gray-700 max-w-2xl w-full mx-4 max-h-[95vh] overflow-y-auto shadow-2xl">
+        <h2 className="text-2xl font-bold text-white mb-6">Edit Project</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title & Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Project Title <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                required
+                className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter project title"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Status</label>
+              <select
+                value={form.status}
+                onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">Description <span className="text-red-500">*</span></label>
+            <textarea
+              value={form.description}
+              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              required
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              placeholder="Enter project description"
+            />
+          </div>
+          {/* URLs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">GitHub URL</label>
+              <input
+                type="url"
+                value={form.githubUrl}
+                onChange={e => setForm(f => ({ ...f, githubUrl: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://github.com/username/repo"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Live URL</label>
+              <input
+                type="url"
+                value={form.liveUrl}
+                onChange={e => setForm(f => ({ ...f, liveUrl: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://your-project.com"
+              />
+            </div>
+          </div>
+          {/* Thumbnail */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">Project Thumbnail</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailChange}
+              className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+            />
+            {form.imageUrl && (
+              <div className="mt-2">
+                <img src={form.imageUrl} alt="Preview" className="w-24 h-24 object-cover rounded-lg border border-gray-700" />
+              </div>
+            )}
+          </div>
+          {/* Technologies */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">Technologies</label>
+            <div className="flex space-x-2 mb-2">
+              <input
+                type="text"
+                value={techInput}
+                onChange={e => setTechInput(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Add technology"
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddTechnology())}
+              />
+              <button
+                type="button"
+                onClick={handleAddTechnology}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {form.technologies.map((tech, index) => (
+                <span key={index} className="px-3 py-1 bg-blue-900 text-blue-300 text-sm rounded-full flex items-center">
+                  {tech}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTechnology(index)}
+                    className="ml-2 text-blue-400 hover:text-red-400"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+          {/* Features */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">Features</label>
+            <div className="flex space-x-2 mb-2">
+              <input
+                type="text"
+                value={featureInput}
+                onChange={e => setFeatureInput(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Add feature"
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddFeature())}
+              />
+              <button
+                type="button"
+                onClick={handleAddFeature}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {form.features.map((feature, index) => (
+                <span key={index} className="px-3 py-1 bg-green-900 text-green-300 text-sm rounded-full flex items-center">
+                  {feature}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(index)}
+                    className="ml-2 text-green-400 hover:text-red-400"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+          {/* Error */}
+          {error && (
+            <div className="p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">{error}</div>
+          )}
+          {/* Actions */}
+          <div className="flex justify-end space-x-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                loading
+                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {loading ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export default Admin 
