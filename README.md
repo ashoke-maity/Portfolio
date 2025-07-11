@@ -52,7 +52,7 @@ src/
 - React Router v6
 - Tailwind CSS
 - Vite
-- LocalStorage for data persistence
+- Cloud Database MongoDB
 
 ## Customization
 
