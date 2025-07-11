@@ -124,20 +124,8 @@ const AdminProfile = async (req, res) => {
   }
 };
 
-// Admin Logout
-const AdminLogout = async (req, res) => {
-  try {
-    res.status(200).json({ success: true, msg: 'Admin logged out successfully.' });
-  } catch (error) {
-    console.error('Logout api error:', error);
-    res.status(500).json({ success: false, msg: 'Server Error.' });
-  }
-};
-
 module.exports = {
   AdminRegister,
   AdminLogin,
   AdminDashboard,
-  AdminProfile,
-  AdminLogout,
 };
