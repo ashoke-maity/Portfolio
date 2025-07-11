@@ -1,84 +1,47 @@
 import React, { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import axios from 'axios'
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('token')
-        const adminData = localStorage.getItem('adminData')
-        
-        if (!token || !adminData) {
-          setIsAuthenticated(false)
-          setIsLoading(false)
-          return
-        }
-
-        // Basic token validation - check if token exists and is not expired
-        try {
-          const tokenPayload = JSON.parse(atob(token.split('.')[1]))
-          const currentTime = Math.floor(Date.now() / 1000)
-          
-          if (tokenPayload.exp && tokenPayload.exp < currentTime) {
-            // Token expired
-            localStorage.removeItem('token')
-            localStorage.removeItem('adminData')
-            setIsAuthenticated(false)
-            setIsLoading(false)
-            return
-          }
-        } catch (tokenError) {
-          // Invalid token format, try backend verification
-          console.log('Invalid token format, attempting backend verification')
-        }
-
-        // Try to verify with backend
-        try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_ADMIN_ROUTE}/verify-token`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              }
-            }
-          )
-
-          if (response.data.success) {
-            setIsAuthenticated(true)
-          } else {
-            // Token is invalid, remove it
-            localStorage.removeItem('token')
-            localStorage.removeItem('adminData')
-            setIsAuthenticated(false)
-          }
-        } catch (backendError) {
-          // Backend verification failed, but token exists and is not expired
-          // This could be due to network issues or backend not having verify endpoint
-          console.log('Backend verification failed, using token-based auth')
-          if (token && adminData) {
-            setIsAuthenticated(true)
-          } else {
-            setIsAuthenticated(false)
-          }
-        }
-      } catch (error) {
-        console.error('Auth verification failed:', error)
-        // Remove invalid token
-        localStorage.removeItem('token')
-        localStorage.removeItem('adminData')
+    const checkAuth = () => {
+      console.log('Checking authentication...')
+      
+      const token = localStorage.getItem('token')
+      const adminCredentials = localStorage.getItem('adminCredentials')
+      
+      console.log('Token exists:', !!token)
+      console.log('Admin credentials exist:', !!adminCredentials)
+      
+      // Simple check: if both token and admin credentials exist, user is authenticated
+      if (token && adminCredentials) {
+        setIsAuthenticated(true)
+        console.log('User is authenticated')
+      } else {
         setIsAuthenticated(false)
-      } finally {
-        setIsLoading(false)
+        console.log('User is not authenticated')
       }
+      
+      setIsLoading(false)
+      console.log('Authentication check complete')
     }
 
+    // Check authentication immediately
     checkAuth()
-  }, [])
+    
+    // Fallback timeout - if still loading after 3 seconds, assume not authenticated
+    const fallbackTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log('Fallback timeout: assuming not authenticated')
+        setIsAuthenticated(false)
+        setIsLoading(false)
+      }
+    }, 3000)
+
+    return () => clearTimeout(fallbackTimeout)
+  }, [isLoading])
 
   if (isLoading) {
     return (
@@ -86,6 +49,7 @@ const ProtectedRoute = ({ children }) => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="text-gray-400 mt-4">Verifying authentication...</p>
+          <p className="text-gray-500 mt-2 text-sm">If this takes too long, please refresh the page</p>
         </div>
       </div>
     )

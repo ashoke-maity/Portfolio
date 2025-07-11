@@ -15,13 +15,13 @@ function Login() {
   // Check if user is already authenticated
   useEffect(() => {
     const token = localStorage.getItem('token')
-    const adminData = localStorage.getItem('adminData')
+    const adminCredentials = localStorage.getItem('adminCredentials')
     
-    if (token && adminData) {
+    if (token && adminCredentials) {
       // User is already logged in, redirect to admin
       navigate('/admin')
     }
-  }, [navigate])
+  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -59,7 +59,10 @@ function Login() {
       if (response.data.success) {
         // Store JWT token and admin data
         localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('adminCredentials', JSON.stringify(response.data.data.admin));
         localStorage.setItem('adminData', JSON.stringify(response.data.data.admin));
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('adminEmail', response.data.data.admin.email);
         
         // Redirect to admin dashboard
         navigate('/admin');

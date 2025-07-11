@@ -1,64 +1,40 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import ProjectCard from '../components/ProjectCard'
 
 function Projects() {
   const [filter, setFilter] = useState('all')
   const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  // Load projects from localStorage on component mount
+  // Get API base URL from environment variable
+  const SERVER_URL = import.meta.env.VITE_SERVER_URL
+
+  // Fetch projects from API
   useEffect(() => {
-    const storedProjects = localStorage.getItem('portfolioProjects')
-    if (storedProjects) {
-      setProjects(JSON.parse(storedProjects))
-    } else {
-      // Default projects if none exist
-      const defaultProjects = [
-        {
-          id: 1,
-          title: 'E-Commerce Platform',
-          description: 'A full-stack e-commerce application with user authentication, product management, shopping cart, and payment integration.',
-          image: '🛒',
-          thumbnail: null,
-          status: 'completed',
-          technologies: ['React', 'Node.js', 'MongoDB', 'Express', 'Stripe'],
-          features: ['User Authentication', 'Product Catalog', 'Shopping Cart', 'Payment Processing', 'Admin Dashboard'],
-          github: 'https://github.com/yourusername/ecommerce-app',
-          live: 'https://your-ecommerce-app.com',
-          category: 'web-app',
-          createdAt: '2024-01-15'
-        },
-        {
-          id: 2,
-          title: 'Task Management System',
-          description: 'A collaborative task management application with real-time updates, team collaboration, and progress tracking.',
-          image: '📋',
-          thumbnail: null,
-          status: 'ongoing',
-          technologies: ['React', 'Node.js', 'Socket.io', 'MongoDB', 'Tailwind CSS'],
-          features: ['Real-time Updates', 'Team Collaboration', 'Task Assignment', 'Progress Tracking', 'File Sharing'],
-          github: 'https://github.com/yourusername/task-manager',
-          live: null,
-          category: 'web-app',
-          createdAt: '2024-02-01'
+    const fetchProjects = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        
+        const response = await axios.get(`${SERVER_URL}/portfolio/user/user/projects`)
+        
+        if (response.data.success) {
+          setProjects(response.data.projects)
+        } else {
+          setError('Failed to fetch projects')
         }
-      ]
-      setProjects(defaultProjects)
-      localStorage.setItem('portfolioProjects', JSON.stringify(defaultProjects))
-    }
-  }, [])
-
-  // Listen for changes to localStorage
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const storedProjects = localStorage.getItem('portfolioProjects')
-      if (storedProjects) {
-        setProjects(JSON.parse(storedProjects))
+      } catch (err) {
+        console.error('Error fetching projects:', err)
+        setError('Failed to load projects. Please try again later.')
+      } finally {
+        setLoading(false)
       }
     }
 
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
+    fetchProjects()
+  }, [SERVER_URL])
 
   const filteredProjects = filter === 'all' 
     ? projects 
@@ -111,19 +87,42 @@ function Projects() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading projects...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📁</div>
+            <h3 className="text-xl font-semibold text-white mb-2">No projects yet</h3>
+            <p className="text-gray-400">Projects will appear here once they are added.</p>
+          </div>
+        )}
+
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {filteredProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
+        {!loading && !error && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {filteredProjects.map((project) => (
+              <ProjectCard key={project._id || project.id} project={project} />
+            ))}
+          </div>
+        )}
 
         {/* Empty State */}
-        {filteredProjects.length === 0 && (
+        {!loading && !error && filteredProjects.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📁</div>
             <h3 className="text-xl font-semibold text-white mb-2">No projects found</h3>
-            <p className="text-gray-400">No projects match the selected filter.</p>
+            <p className="text-gray-400">
+              {filter === 'all' 
+                ? 'No projects have been added yet.' 
+                : 'No projects match the selected filter.'}
+            </p>
           </div>
         )}
 
