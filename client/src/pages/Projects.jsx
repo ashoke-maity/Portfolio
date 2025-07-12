@@ -38,7 +38,13 @@ function Projects() {
 
   const filteredProjects = filter === 'all' 
     ? projects 
-    : projects.filter(project => project.status === filter)
+    : projects.filter(project => {
+        const status = project.Status || project.status;
+        if (filter === 'completed') {
+          return status === 'Completed' || status === 'completed';
+        }
+        return status === filter;
+      })
 
   return (
     <div className="min-h-screen py-20 bg-gray-900">
@@ -75,7 +81,7 @@ function Projects() {
               Completed
             </button>
             <button
-              onClick={() => setFilter('ongoing')}
+              onClick={() => setFilter('Ongoing')}
               className={`px-6 py-2 rounded-md font-medium transition-colors ${
                 filter === 'ongoing'
                   ? 'bg-yellow-600 text-white'
