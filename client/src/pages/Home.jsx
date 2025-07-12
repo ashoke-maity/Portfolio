@@ -106,25 +106,129 @@ function Home() {
             <h2 className="text-3xl font-bold text-white mb-4">Technologies I Work With</h2>
             <p className="text-lg text-gray-400">Modern tools and frameworks for building amazing applications</p>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
-            {[
-              { name: 'React', icon: '⚛️', color: 'bg-blue-900' },
-              { name: 'Node.js', icon: '🟢', color: 'bg-green-900' },
-              { name: 'JavaScript', icon: '🟡', color: 'bg-yellow-900' },
-              { name: 'Python', icon: '🐍', color: 'bg-green-800' },
-              { name: 'Docker', icon: '🐳', color: 'bg-blue-800' },
-              { name: 'HTML/CSS', icon: '🎨', color: 'bg-orange-900' },
-              { name: 'MongoDB', icon: '🍃', color: 'bg-green-900' },
-              { name: 'Git', icon: '📝', color: 'bg-red-900' }
-            ].map((tech, index) => (
-              <div key={index} className="text-center group">
-                <div className={`${tech.color} w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200 border border-gray-700`}>
-                  <span className="text-2xl">{tech.icon}</span>
+
+          {/* Web Development */}
+          <div className="mb-10">
+            <h3 className="text-xl font-semibold text-blue-400 mb-4">Web Development</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+              {[
+                { name: 'ReactJS', svg: '/reactjs-svgrepo-com.svg', color: 'bg-blue-900' },
+                { name: 'Vite', svg: '/vite.svg', color: 'bg-orange-900' },
+                { name: 'Node.js', svg: '/nodejs-icon-logo-svgrepo-com.svg', color: 'bg-green-900' },
+                { name: 'Express', svg: '/Express.svg', color: 'bg-gray-800' },
+                { name: 'JavaScript', svg: '/javascript-svgrepo-com.svg', color: 'bg-yellow-900' },
+                { name: 'MongoDB', svg: '/mongodb-svgrepo-com.svg', color: 'bg-green-900' },
+                { name: 'Tailwind', svg: '/tailwind-svgrepo-com.svg', color: 'bg-blue-800' },
+                { name: 'Three.js', svg: '/Three.js.svg', color: 'bg-gray-900' },
+                { name: 'Nodemon', svg: '/Nodemon.svg', color: 'bg-green-800' }
+              ].map((tech, index) => (
+                <div key={index} className="text-center group">
+                  <div className={`${tech.color} w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200 border border-gray-700`}>
+                    <img src={tech.svg} alt={tech.name} className="w-10 h-10 object-contain" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-300">{tech.name}</p>
                 </div>
-                <p className="text-sm font-medium text-gray-300">{tech.name}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* AIML */}
+          <div className="mb-10">
+            <h3 className="text-xl font-semibold text-blue-400 mb-4">AI/ML & Data Science</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+              {[
+                { name: 'Python', svg: '/python-svgrepo-com.svg', color: 'bg-green-800' },
+                { name: 'NumPy', svg: '/NumPy.svg', color: 'bg-yellow-900' },
+                { name: 'Matplotlib', svg: '/Matplotlib.svg', color: 'bg-purple-900' },
+                { name: 'Scikit Learn', svg: '/scikit-learn.svg', color: 'bg-orange-900' },
+                { name: 'Pandas', svg: '/Pandas.svg', color: 'bg-blue-900' },
+                { name: 'Kaggle', svg: '/Kaggle.svg', color: 'bg-blue-800' }
+              ].map((tech, index) => (
+                <div key={index} className="text-center group">
+                  <div className={`${tech.color} w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200 border border-gray-700`}>
+                    <img src={tech.svg} alt={tech.name} className="w-10 h-10 object-contain" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-300">{tech.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* DevOps */}
+          <div className="mb-10">
+            <h3 className="text-xl font-semibold text-blue-400 mb-4">DevOps</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+              {[
+                { name: 'GitHub', svg: '/github-142-svgrepo-com.svg', color: 'bg-gray-900' },
+                { name: 'Docker', svg: '/docker-svgrepo-com.svg', color: 'bg-blue-800' }
+              ].map((tech, index) => (
+                <div key={index} className="text-center group">
+                  <div className={`${tech.color} w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200 border border-gray-700`}>
+                    <img src={tech.svg} alt={tech.name} className="w-10 h-10 object-contain" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-300">{tech.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Deployment */}
+          <div className="mb-10">
+            <h3 className="text-xl font-semibold text-blue-400 mb-4">Deployment</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+              {[
+              { name: 'Vercel', svg: '/vercel-logo-svgrepo-com.svg', color: 'bg-gray-900' },
+              { name: 'Render', svg: '/render-icon.png', color: 'bg-blue-900' },
+              { name: 'GitHub Actions', svg: '/github-142-svgrepo-com.svg', color: 'bg-gray-800' }
+              ].map((tech, index) => (
+                <div key={index} className="text-center group">
+                  <div className={`${tech.color} w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200 border border-gray-700`}>
+                    <img src={tech.svg} alt={tech.name} className="w-10 h-10 object-contain" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-300">{tech.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Code Editors */}
+          <div className="mb-10">
+            <h3 className="text-xl font-semibold text-blue-400 mb-4">Code Editors</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+              {[
+                { name: 'Cursor AI', svg: '/icons8-cursor-ai.svg', color: 'bg-blue-900' },
+                { name: 'VS Code', svg: '/Visual Studio Code (VS Code).svg', color: 'bg-blue-800' },
+                { name: 'Jupyter', svg: '/Jupyter.svg', color: 'bg-orange-800' }
+              ].map((tech, index) => (
+                <div key={index} className="text-center group">
+                  <div className={`${tech.color} w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200 border border-gray-700`}>
+                    <img src={tech.svg} alt={tech.name} className="w-10 h-10 object-contain" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-300">{tech.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* UI/UX & Design */}
+          <div className="mb-10">
+            <h3 className="text-xl font-semibold text-blue-400 mb-4">UI/UX & Design</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+              {[
+                { name: 'Figma', svg: '/Figma.svg', color: 'bg-purple-900' },
+                { name: 'Adobe After Effects', svg: '/After Effects.svg', color: 'bg-blue-900' },
+                { name: 'Adobe Photoshop', svg: '/Adobe Photoshop.svg', color: 'bg-blue-800' },
+                { name: 'Adobe Premiere Pro', svg: '/Adobe Premiere Pro.svg', color: 'bg-purple-800' },
+                { name: 'Canva', svg: '/Canva.svg', color: 'bg-blue-700' }
+              ].map((tech, index) => (
+                <div key={index} className="text-center group">
+                  <div className={`${tech.color} w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200 border border-gray-700`}>
+                    <img src={tech.svg} alt={tech.name} className="w-10 h-10 object-contain" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-300">{tech.name}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

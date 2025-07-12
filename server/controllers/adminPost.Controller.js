@@ -10,19 +10,32 @@ const AdminPosts = async (req, res) => {
       return res.status(401).json({ success: false, msg: 'Unauthorized' });
     }
 
-    // Get project data from request body
-    const { title, description, imageUrl, liveUrl, githubUrl } = req.body;
-    if (!title || !description) {
-      return res.status(400).json({ success: false, msg: 'Title and description are required.' });
+    // Parse fields directly from req.body
+    const { ProjectTitle, Description, GithubRespoLink, LiveDemoURL, Status, ThumbnailImage, TechnologiesUsed, Features } = req.body;
+
+    if (!ProjectTitle || !Description) {
+      return res.status(400).json({ success: false, msg: 'Project title and description are required.' });
     }
 
-    // Create new project
+    // Parse arrays if sent as JSON strings
+    let technologies = TechnologiesUsed;
+    let features = Features;
+    if (typeof technologies === 'string') {
+      try { technologies = JSON.parse(technologies); } catch {}
+    }
+    if (typeof features === 'string') {
+      try { features = JSON.parse(features); } catch {}
+    }
+
     const newProject = new Project({
-      title,
-      description,
-      imageUrl,
-      liveUrl,
-      githubUrl,
+      ProjectTitle,
+      Description,
+      GithubRespoLink,
+      LiveDemoURL,
+      Status: Status || 'Ongoing',
+      ThumbnailImage,
+      TechnologiesUsed: technologies,
+      Features: features,
       createdBy: req.admin.adminId
     });
     await newProject.save();
@@ -59,14 +72,14 @@ const AdminModifyExistingPost = async (req, res) => {
 
     const { projectId } = req.params;
     const {
-      status,
-      title,
-      description,
-      githubUrl,
-      liveUrl,
-      imageUrl,
-      technologies,
-      features
+      ProjectTitle,
+      Description,
+      GithubRespoLink,
+      LiveDemoURL,
+      Status,
+      ThumbnailImage,
+      TechnologiesUsed,
+      Features
     } = req.body;
 
     // Find the project and ensure it belongs to the admin
@@ -76,14 +89,14 @@ const AdminModifyExistingPost = async (req, res) => {
     }
 
     // Update fields if provided
-    if (status !== undefined) project.status = status;
-    if (title !== undefined) project.title = title;
-    if (description !== undefined) project.description = description;
-    if (githubUrl !== undefined) project.githubUrl = githubUrl;
-    if (liveUrl !== undefined) project.liveUrl = liveUrl;
-    if (imageUrl !== undefined) project.imageUrl = imageUrl;
-    if (technologies !== undefined) project.technologies = technologies;
-    if (features !== undefined) project.features = features;
+    if (ProjectTitle !== undefined) project.ProjectTitle = ProjectTitle;
+    if (Description !== undefined) project.Description = Description;
+    if (GithubRespoLink !== undefined) project.GithubRespoLink = GithubRespoLink;
+    if (LiveDemoURL !== undefined) project.LiveDemoURL = LiveDemoURL;
+    if (Status !== undefined) project.Status = Status;
+    if (ThumbnailImage !== undefined) project.ThumbnailImage = ThumbnailImage;
+    if (TechnologiesUsed !== undefined) project.TechnologiesUsed = typeof TechnologiesUsed === 'string' ? JSON.parse(TechnologiesUsed) : TechnologiesUsed;
+    if (Features !== undefined) project.Features = typeof Features === 'string' ? JSON.parse(Features) : Features;
 
     await project.save();
 
