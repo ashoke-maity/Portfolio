@@ -1,38 +1,24 @@
-const multer = require("multer");
-const bucket = require("../configs/firebase");
+const { storage } = require('../configs/appwrite.Config.JS');
+const sdk = require("node-appwrite");
 
-// Configure multer to store files in memory
-const upload = multer({ storage: multer.memoryStorage() });
+const uploadImageToAppwrite = async (file) => {
+  try {
+    // Convert buffer to File object for Appwrite
+    const fileObject = sdk.InputFile.fromBuffer(file.buffer, file.originalname);
+    
+    const result = await storage.createFile(
+      process.env.APPWRITE_BUCKET_ID,
+      'unique()', // generates a unique file ID
+      fileObject
+    );
+    return result; // result.$id or result.url (based on permissions)
+  } catch (error) {
+    console.error('Appwrite upload error:', error.message);
+    throw error;
+  }
+};
 
-exports.uploadImage = [
-  upload.single("image"), // field name should match your form input
-  async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
+module.exports = {
+  uploadImageToAppwrite
+};
 
-    const fileName = Date.now() + "-" + req.file.originalname;
-    const file = bucket.file(fileName);
-
-    const stream = file.createWriteStream({
-      metadata: {
-        contentType: req.file.mimetype,
-      },
-    });
-
-    stream.on("error", (err) => {
-      console.error("Upload error:", err);
-      res.status(500).json({ error: "Upload failed" });
-    });
-
-    stream.on("finish", async () => {
-      // Make the file publicly accessible (optional)
-      await file.makePublic();
-
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
-      res.status(200).json({ imageUrl: publicUrl });
-    });
-
-    stream.end(req.file.buffer);
-  },
-];

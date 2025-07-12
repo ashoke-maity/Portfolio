@@ -9,6 +9,7 @@ const AdminRouter = require('./routes/admin.Route');
 const AdminPostRouter = require('./routes/adminPost.Route');
 const UserProjectFetchRouter = require('./routes/UserFetchingAdmin.Route');
 const uploadRouter = require('./routes/upload.Route');
+const userImageRouter = require('./routes/userImage.Route');
 
 // database connection
 const dbConnect = require('./configs/db');
@@ -23,6 +24,7 @@ app.use(process.env.ADMIN_ROUTE, AdminRouter);
 app.use(process.env.ADMIN_ROUTE, AdminPostRouter);
 app.use(process.env.USER_ROUTE, UserProjectFetchRouter);
 app.use(process.env.ADMIN_ROUTE, uploadRouter);
+app.use(process.env.USER_ROUTE, userImageRouter);
 
 // server start
 app.listen(process.env.PORT, () => {

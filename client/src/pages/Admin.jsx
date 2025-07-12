@@ -614,14 +614,18 @@ function Admin() {
     }));
   }
 
+  // Store the file object for upload
+  const [thumbnailFile, setThumbnailFile] = useState(null);
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setThumbnailFile(file);
+      // Show preview
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = (ev) => {
         setNewProject(prev => ({
           ...prev,
-          imageUrl: e.target.result
+          imageUrl: ev.target.result
         }));
       };
       reader.readAsDataURL(file);
@@ -629,31 +633,38 @@ function Admin() {
   };
 
   const handleSubmitProject = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
     try {
-      const token = localStorage.getItem('token')
-      
+      const token = localStorage.getItem('token');
       if (!token) {
-        navigate('/login')
-        return
+        navigate('/login');
+        return;
       }
 
-      const response = await axios.post(`${ADMIN_ROUTE}/admin/posts`, {
-        title: newProject.title,
-        description: newProject.description,
-        imageUrl: newProject.imageUrl,
-        githubUrl: newProject.githubUrl,
-        liveUrl: newProject.liveUrl,
-        status: newProject.status,
-        technologies: newProject.technologies,
-        features: newProject.features
-      })
+      // Use FormData for file upload with correct field names
+      const formData = new FormData();
+      formData.append('ProjectTitle', newProject.title);
+      formData.append('Description', newProject.description);
+      formData.append('GithubRespoLink', newProject.githubUrl);
+      formData.append('LiveDemoURL', newProject.liveUrl);
+      formData.append('Status', newProject.status);
+      formData.append('TechnologiesUsed', JSON.stringify(newProject.technologies));
+      formData.append('Features', JSON.stringify(newProject.features));
+      if (thumbnailFile) {
+        formData.append('ThumbnailImage', thumbnailFile);
+      }
+
+      const response = await axios.post(`${ADMIN_ROUTE}/admin/posts`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       if (response.data.success) {
-        // Reset form
+        // Use Firebase URL from backend
         setNewProject({
           title: '',
           description: '',
@@ -663,20 +674,20 @@ function Admin() {
           features: [],
           githubUrl: '',
           liveUrl: ''
-        })
-        // Refresh projects list
-        fetchProjects()
-        setError('')
+        });
+        setThumbnailFile(null);
+        fetchProjects();
+        setError('');
       } else {
-        setError(response.data.msg || 'Failed to create project')
+        setError(response.data.msg || 'Failed to create project');
       }
     } catch (error) {
-      console.error('Error creating project:', error)
-      setError(error.response?.data?.msg || 'Failed to create project')
+      console.error('Error creating project:', error);
+      setError(error.response?.data?.msg || 'Failed to create project');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleUpdateProject = async (projectId, updatedData) => {
     try {
