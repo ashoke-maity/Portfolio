@@ -7,25 +7,19 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      console.log('Checking authentication...')
       
       const token = localStorage.getItem('token')
       const adminCredentials = localStorage.getItem('adminCredentials')
       
-      console.log('Token exists:', !!token)
-      console.log('Admin credentials exist:', !!adminCredentials)
-      
       // Simple check: if both token and admin credentials exist, user is authenticated
       if (token && adminCredentials) {
         setIsAuthenticated(true)
-        console.log('User is authenticated')
       } else {
         setIsAuthenticated(false)
-        console.log('User is not authenticated')
       }
       
       setIsLoading(false)
-      console.log('Authentication check complete')
+
     }
 
     // Check authentication immediately
@@ -34,7 +28,6 @@ const ProtectedRoute = ({ children }) => {
     // Fallback timeout - if still loading after 3 seconds, assume not authenticated
     const fallbackTimeout = setTimeout(() => {
       if (isLoading) {
-        console.log('Fallback timeout: assuming not authenticated')
         setIsAuthenticated(false)
         setIsLoading(false)
       }

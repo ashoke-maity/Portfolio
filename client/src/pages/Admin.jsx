@@ -2,8 +2,114 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+// Custom image component with error handling
+function ProjectImage({ src, alt, className }) {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const handleImageError = () => {
+    console.error('Failed to load image:', src);
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    console.log('Image loaded successfully:', src);
+    setImageLoaded(true);
+  };
+
+  if (!src || imageError) {
+    return (
+      <div className={`${className} bg-blue-900 rounded-lg flex items-center justify-center`}>
+        <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <img 
+        src={src} 
+        alt={alt} 
+        className={className}
+        onError={handleImageError}
+        onLoad={handleImageLoad}
+      />
+      {!imageLoaded && (
+        <div className={`${className} bg-blue-900 rounded-lg flex items-center justify-center absolute inset-0`}>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Dropdown component for status change
+function StatusDropdown({ project, onStatusChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleStatusChange = async (newStatus) => {
+    setIsUpdating(true);
+    try {
+      await onStatusChange(project._id, newStatus);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    } finally {
+      setIsUpdating(false);
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-1 text-gray-400 hover:text-white transition-colors"
+        disabled={isUpdating}
+      >
+        {isUpdating ? (
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+        ) : (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-32 bg-gray-800 rounded-md shadow-lg border border-gray-600 z-10">
+          <div className="py-1">
+            <button
+              onClick={() => handleStatusChange('Ongoing')}
+              className={`block px-4 py-2 text-sm w-full text-left transition-colors ${
+                (project.Status || project.status) === 'Ongoing'
+                  ? 'bg-yellow-900 text-yellow-300'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`}
+            >
+              🔄 Ongoing
+            </button>
+            <button
+              onClick={() => handleStatusChange('Completed')}
+              className={`block px-4 py-2 text-sm w-full text-left transition-colors ${
+                (project.Status || project.status) === 'Completed'
+                  ? 'bg-green-900 text-green-300'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`}
+            >
+              ✅ Completed
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Dashboard Component - moved outside to prevent re-creation
-function Dashboard({ visitorCount, projects, loading }) {
+function Dashboard({ visitorCount, projects, loading, onStatusChange }) {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white mb-6">Dashboard Overview</h2>
@@ -41,14 +147,14 @@ function Dashboard({ visitorCount, projects, loading }) {
 
         <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
           <div className="flex items-center">
-            <div className="p-3 bg-purple-900 rounded-lg">
-              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <div className="p-3 bg-yellow-900 rounded-lg">
+              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Active Projects</p>
-              <p className="text-2xl font-bold text-white">{projects.filter(p => p.status === 'ongoing').length}</p>
+              <p className="text-sm font-medium text-gray-400">Ongoing Projects</p>
+              <p className="text-2xl font-bold text-white">{projects.filter(p => (p.Status || p.status) === 'Ongoing').length}</p>
             </div>
           </div>
         </div>
@@ -72,23 +178,30 @@ function Dashboard({ visitorCount, projects, loading }) {
             {projects.slice(0, 3).map((project) => (
               <div key={project._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-900 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                  </div>
+                  {/* Project thumbnail instead of emoji */}
+                  <ProjectImage 
+                    src={project.ThumbnailImage} 
+                    alt="Project Thumbnail" 
+                    className="w-12 h-12 rounded-lg object-cover" 
+                  />
                   <div>
-                    <h4 className="font-medium text-white">{project.title}</h4>
-                    <p className="text-sm text-gray-400">{project.description.substring(0, 50)}...</p>
+                    <h4 className="font-medium text-white">{project.ProjectTitle || project.title}</h4>
+                    <p className="text-sm text-gray-400">
+                      {project.Description ? project.Description.substring(0, 50) : (project.description?.substring(0, 50) || '')}...
+                    </p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  project.status === 'completed' 
-                    ? 'bg-green-900 text-green-300' 
-                    : 'bg-yellow-900 text-yellow-300'
-                }`}>
-                  {project.status}
-                </span>
+                <div className="flex items-center space-x-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    (project.Status || project.status) === 'Completed' 
+                      ? 'bg-green-900 text-green-300' 
+                      : 'bg-yellow-900 text-yellow-300'
+                  }`}>
+                    {(project.Status || project.status) === 'Completed' ? '✅ Completed' : '🔄 Ongoing'}
+                  </span>
+                  {/* Three dots dropdown for status change */}
+                  <StatusDropdown project={project} onStatusChange={onStatusChange} />
+                </div>
               </div>
             ))}
           </div>
@@ -148,8 +261,8 @@ function ProjectManagement({
                 onChange={(e) => setNewProject({...newProject, status: e.target.value})}
                 className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="ongoing">Ongoing</option>
-                <option value="completed">Completed</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Completed">Completed</option>
               </select>
             </div>
           </div>
@@ -198,9 +311,14 @@ function ProjectManagement({
               onChange={handleThumbnailChange}
               className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
             />
+            {/* Show preview if imageUrl is set, else show nothing */}
             {newProject.imageUrl && (
               <div className="mt-2">
-                <img src={newProject.imageUrl} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                <ProjectImage 
+                  src={newProject.imageUrl} 
+                  alt="Preview" 
+                  className="w-20 h-20 object-cover rounded" 
+                />
               </div>
             )}
           </div>
@@ -307,42 +425,115 @@ function ProjectManagement({
         ) : (
           <div className="space-y-4">
             {projects.map((project) => (
-              <div key={project._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-900 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
+              <div key={project._id} className="bg-gray-700 rounded-lg p-6 border border-gray-600">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    {/* Show project thumbnail from Appwrite with proper error handling */}
+                    <ProjectImage 
+                      src={project.ThumbnailImage} 
+                      alt="Project Thumbnail" 
+                      className="w-16 h-16 rounded-lg object-cover" 
+                    />
+                    <div>
+                      <h4 className="text-xl font-bold text-white mb-2">{project.ProjectTitle || project.title}</h4>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        (project.Status || project.status) === 'Completed' 
+                          ? 'bg-green-900 text-green-300' 
+                          : 'bg-yellow-900 text-yellow-300'
+                      }`}>
+                        {(project.Status || project.status) === 'Completed' ? '✅ Completed' : '🔄 In Progress'}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-white">{project.title}</h4>
-                    <p className="text-sm text-gray-400">{project.description.substring(0, 50)}...</p>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => { setEditingProject(project); setEditForm({ ...project }); }}
+                      className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900 rounded-lg transition-colors"
+                      title="Edit Project"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProject(project._id)}
+                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900 rounded-lg transition-colors"
+                      title="Delete Project"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    project.status === 'completed' 
-                      ? 'bg-green-900 text-green-300' 
-                      : 'bg-yellow-900 text-yellow-300'
-                  }`}>
-                    {project.status}
-                  </span>
-                  <button
-                    onClick={() => { setEditingProject(project); setEditForm({ ...project }); }}
-                    className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900 rounded-lg transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProject(project._id)}
-                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900 rounded-lg transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+
+                {/* Description */}
+                <div className="mb-4">
+                  <h5 className="text-sm font-semibold text-gray-300 mb-2">Description</h5>
+                  <p className="text-gray-400 leading-relaxed">{project.Description || project.description}</p>
+                </div>
+
+                {/* URLs */}
+                <div className="flex flex-wrap gap-4 mb-4">
+                  {project.GithubRespoLink && (
+                    <a
+                      href={project.GithubRespoLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-3 py-2 bg-gray-800 text-blue-400 rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      </svg>
+                      View Code
+                    </a>
+                  )}
+                  {project.LiveDemoURL && (
+                    <a
+                      href={project.LiveDemoURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      Live Demo
+                    </a>
+                  )}
+                </div>
+
+                {/* Technologies Used */}
+                {project.TechnologiesUsed && project.TechnologiesUsed.length > 0 && (
+                  <div className="mb-4">
+                    <h5 className="text-sm font-semibold text-gray-300 mb-2">Technologies Used</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {project.TechnologiesUsed.map((tech, index) => (
+                        <span key={index} className="px-3 py-1 bg-blue-900 text-blue-300 text-sm rounded-full border border-blue-700">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Features */}
+                {project.Features && project.Features.length > 0 && (
+                  <div className="mb-4">
+                    <h5 className="text-sm font-semibold text-gray-300 mb-2">Key Features</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {project.Features.map((feature, index) => (
+                        <span key={index} className="px-3 py-1 bg-green-900 text-green-300 text-sm rounded-full border border-green-700">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Created Date */}
+                <div className="text-xs text-gray-500 mt-4">
+                  Created: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'N/A'}
                 </div>
               </div>
             ))}
@@ -400,7 +591,6 @@ function Admin() {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          console.log('401 error detected, clearing auth data and redirecting to login')
           localStorage.removeItem('token')
           localStorage.removeItem('adminCredentials')
           localStorage.removeItem('adminData')
@@ -426,18 +616,14 @@ function Admin() {
     
     const initializeAdmin = async () => {
       try {
-        console.log('Initializing admin...')
         if (!isMounted) return
         
         const adminEmail = localStorage.getItem('adminEmail')
         const adminCredentials = localStorage.getItem('adminCredentials')
         const token = localStorage.getItem('token')
         
-        console.log('Admin initialization - Token exists:', !!token)
-        console.log('Admin initialization - Admin credentials exist:', !!adminCredentials)
         
         if (!token) {
-          console.log('No token found, redirecting to login')
           if (isMounted) {
             setInitializing(false)
             navigate('/login')
@@ -448,14 +634,12 @@ function Admin() {
         if (adminCredentials) {
           try {
             const admin = JSON.parse(adminCredentials)
-            console.log('Admin credentials parsed successfully:', admin)
             if (isMounted) {
               setAdminInfo(admin)
               setInitializing(false)
-              console.log('Admin initialized successfully')
             }
           } catch (error) {
-            console.error('Error parsing admin credentials:', error)
+            
             if (isMounted) {
               setInitializing(false)
               navigate('/login')
@@ -463,7 +647,6 @@ function Admin() {
             return
           }
         } else {
-          console.log('No admin credentials found, redirecting to login')
           if (isMounted) {
             setInitializing(false)
             navigate('/login')
@@ -471,7 +654,6 @@ function Admin() {
           return
         }
       } catch (error) {
-        console.error('Error initializing admin:', error)
         if (isMounted) {
           setCriticalError('Failed to initialize admin panel')
           setInitializing(false)
@@ -488,13 +670,8 @@ function Admin() {
 
   // Load projects from database on component mount
   useEffect(() => {
-    console.log('useEffect for fetchProjects triggered')
-    console.log('adminInfo:', adminInfo)
     if (adminInfo && (adminInfo.adminId || adminInfo.id)) {
-      console.log('Calling fetchProjects...')
       fetchProjects()
-    } else {
-      console.log('Not calling fetchProjects - admin info not ready')
     }
   }, [adminInfo])
 
@@ -511,32 +688,21 @@ function Admin() {
 
       // Ensure adminInfo is available
       if (!adminInfo || (!adminInfo.adminId && !adminInfo.id)) {
-        console.log('Admin info not available, skipping fetch')
-        console.log('adminInfo:', adminInfo)
         setLoading(false)
         return
       }
 
       const adminId = adminInfo.adminId || adminInfo.id
-      console.log('Fetching projects for admin ID:', adminId)
-      console.log('Making API call to:', `${ADMIN_ROUTE}/admin/existingposts/${adminId}`)
-      
       const response = await axios.get(`${ADMIN_ROUTE}/admin/existingposts/${adminId}`)
       
-      console.log('API response:', response.data)
 
       if (response.data.success) {
         setProjects(response.data.projects || [])
         setError('')
-        console.log('Projects fetched successfully:', response.data.projects)
       } else {
         setError(response.data.msg || 'Failed to fetch projects')
-        console.log('API error:', response.data.msg)
       }
     } catch (error) {
-      console.error('Error fetching projects:', error)
-      console.log('Error status:', error.response?.status)
-      console.log('Error data:', error.response?.data)
       setError(error.response?.data?.msg || 'Failed to fetch projects')
     } finally {
       setLoading(false)
@@ -546,7 +712,7 @@ function Admin() {
     title: '',
     description: '',
     imageUrl: '',
-    status: 'ongoing',
+    status: 'Ongoing',
     technologies: [],
     features: [],
     githubUrl: '',
@@ -644,7 +810,7 @@ function Admin() {
         return;
       }
 
-      // Use FormData for file upload with correct field names
+      // Use FormData for file upload with correct field names (backend expects 'thumbnail')
       const formData = new FormData();
       formData.append('ProjectTitle', newProject.title);
       formData.append('Description', newProject.description);
@@ -654,7 +820,7 @@ function Admin() {
       formData.append('TechnologiesUsed', JSON.stringify(newProject.technologies));
       formData.append('Features', JSON.stringify(newProject.features));
       if (thumbnailFile) {
-        formData.append('ThumbnailImage', thumbnailFile);
+        formData.append('thumbnail', thumbnailFile);
       }
 
       const response = await axios.post(`${ADMIN_ROUTE}/admin/posts`, formData, {
@@ -664,12 +830,12 @@ function Admin() {
       });
 
       if (response.data.success) {
-        // Use Firebase URL from backend
+        // Use Appwrite URL from backend for preview
         setNewProject({
           title: '',
           description: '',
-          imageUrl: '',
-          status: 'ongoing',
+          imageUrl: response.data.project?.ThumbnailImage || '',
+          status: 'Ongoing',
           technologies: [],
           features: [],
           githubUrl: '',
@@ -682,7 +848,6 @@ function Admin() {
         setError(response.data.msg || 'Failed to create project');
       }
     } catch (error) {
-      console.error('Error creating project:', error);
       setError(error.response?.data?.msg || 'Failed to create project');
     } finally {
       setLoading(false);
@@ -749,6 +914,32 @@ function Admin() {
     }
   }
 
+  const handleStatusChange = async (projectId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        navigate('/login')
+        return
+      }
+
+      const response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, {
+        Status: newStatus
+      })
+
+      if (response.data.success) {
+        // Refresh projects list
+        fetchProjects()
+        setError('')
+      } else {
+        setError(response.data.msg || 'Failed to update project status')
+      }
+    } catch (error) {
+      console.error('Error updating project status:', error)
+      setError(error.response?.data?.msg || 'Failed to update project status')
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('adminData')
@@ -758,88 +949,6 @@ function Admin() {
     navigate('/login')
   }
 
-  const Dashboard = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Dashboard Overview</h2>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-900 rounded-lg">
-              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Total Visitors</p>
-              <p className="text-2xl font-bold text-white">{visitorCount}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-900 rounded-lg">
-              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Total Projects</p>
-              <p className="text-2xl font-bold text-white">{projects.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-900 rounded-lg">
-              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Ongoing Projects</p>
-              <p className="text-2xl font-bold text-white">{projects.filter(p => p.status === 'ongoing').length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Projects */}
-      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Recent Projects</h3>
-        {loading ? (
-          <div className="text-center py-4">
-            <div className="text-gray-400">Loading projects...</div>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-4">
-            <div className="text-gray-400">No projects found. Create your first project!</div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {projects.slice(0, 3).map((project) => (
-              <div key={project._id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="text-2xl">💻</div>
-                  <div>
-                    <h4 className="text-white font-medium">{project.title}</h4>
-                    <p className="text-gray-400 text-sm">{project.status}</p>
-                  </div>
-                </div>
-                <span className="text-gray-400 text-sm">
-                  {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'N/A'}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
   // Show critical error screen
   if (criticalError) {
     return (
@@ -926,10 +1035,11 @@ function Admin() {
 
           {/* Content */}
           {activeTab === 'dashboard' && (
-            <Dashboard 
+            <Dashboard  
               visitorCount={visitorCount} 
               projects={projects} 
               loading={loading} 
+              onStatusChange={handleStatusChange}
             />
           )}
           {activeTab === 'projects' && (
@@ -985,7 +1095,7 @@ function EditProjectModal({ project, loading, onClose, onUpdate }) {
     imageUrl: project.imageUrl || '',
     githubUrl: project.githubUrl || '',
     liveUrl: project.liveUrl || '',
-    status: project.status || 'ongoing',
+    status: project.status || 'Ongoing',
     technologies: Array.isArray(project.technologies) ? [...project.technologies] : [],
     features: Array.isArray(project.features) ? [...project.features] : [],
   }));
@@ -1056,8 +1166,8 @@ function EditProjectModal({ project, loading, onClose, onUpdate }) {
                 onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="ongoing">Ongoing</option>
-                <option value="completed">Completed</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Completed">Completed</option>
               </select>
             </div>
           </div>
@@ -1107,7 +1217,11 @@ function EditProjectModal({ project, loading, onClose, onUpdate }) {
             />
             {form.imageUrl && (
               <div className="mt-2">
-                <img src={form.imageUrl} alt="Preview" className="w-24 h-24 object-cover rounded-lg border border-gray-700" />
+                <ProjectImage 
+                  src={form.imageUrl} 
+                  alt="Preview" 
+                  className="w-24 h-24 object-cover rounded-lg border border-gray-700" 
+                />
               </div>
             )}
           </div>
@@ -1212,4 +1326,4 @@ function EditProjectModal({ project, loading, onClose, onUpdate }) {
   );
 }
 
-export default Admin 
+export default Admin

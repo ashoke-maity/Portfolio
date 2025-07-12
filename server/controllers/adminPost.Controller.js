@@ -11,7 +11,7 @@ const AdminPosts = async (req, res) => {
     }
 
     // Parse fields directly from req.body
-    const { ProjectTitle, Description, GithubRespoLink, LiveDemoURL, Status, ThumbnailImage, TechnologiesUsed, Features } = req.body;
+    const { ProjectTitle, Description, GithubRespoLink, LiveDemoURL, Status, TechnologiesUsed, Features } = req.body;
 
     if (!ProjectTitle || !Description) {
       return res.status(400).json({ success: false, msg: 'Project title and description are required.' });
@@ -27,13 +27,31 @@ const AdminPosts = async (req, res) => {
       try { features = JSON.parse(features); } catch {}
     }
 
+    // Handle thumbnail upload
+    let thumbnailUrl = '';
+    if (req.file) {
+      const { uploadImageToAppwrite } = require('./upload.Controller');
+      try {
+        const appwriteResult = await uploadImageToAppwrite(req.file);
+        // You may need to construct the URL based on your Appwrite setup
+        // For example, if public read is enabled:
+        thumbnailUrl = appwriteResult?.$id
+          ? `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.APPWRITE_BUCKET_ID}/files/${appwriteResult.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`
+          : '';
+      } catch (err) {
+        return res.status(500).json({ success: false, msg: 'Thumbnail upload failed.', error: err.message });
+      }
+    } else {
+      return res.status(400).json({ success: false, msg: 'Thumbnail image is required.' });
+    }
+
     const newProject = new Project({
       ProjectTitle,
       Description,
       GithubRespoLink,
       LiveDemoURL,
       Status: Status || 'Ongoing',
-      ThumbnailImage,
+      ThumbnailImage: thumbnailUrl,
       TechnologiesUsed: technologies,
       Features: features,
       createdBy: req.admin.adminId
