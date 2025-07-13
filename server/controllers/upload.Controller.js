@@ -19,7 +19,37 @@ const uploadImageToAppwrite = async (file) => {
   }
 };
 
+const deleteImageFromAppwrite = async (fileId) => {
+  try {
+    await storage.deleteFile(
+      process.env.APPWRITE_BUCKET_ID,
+      fileId
+    );
+    return true;
+  } catch (error) {
+    console.error('Appwrite delete error:', error.message);
+    throw error;
+  }
+};
+
+// Helper function to extract file ID from Appwrite URL
+const extractFileIdFromUrl = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  
+  try {
+    // URL format: https://your-appwrite-endpoint/storage/buckets/bucket-id/files/file-id/view?project=project-id
+    // Also handle URLs without view or query parameters
+    const matches = url.match(/\/files\/([a-zA-Z0-9_-]+)/);
+    return matches ? matches[1] : null;
+  } catch (error) {
+    console.error('Error extracting file ID from URL:', error);
+    return null;
+  }
+};
+
 module.exports = {
-  uploadImageToAppwrite
+  uploadImageToAppwrite,
+  deleteImageFromAppwrite,
+  extractFileIdFromUrl
 };
 

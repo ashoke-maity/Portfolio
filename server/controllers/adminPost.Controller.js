@@ -60,7 +60,7 @@ const AdminPosts = async (req, res) => {
 
     res.status(201).json({ success: true, msg: 'Project posted successfully.', project: newProject });
   } catch (error) {
-    console.error('AdminPosts error:', error);
+
     res.status(500).json({ success: false, msg: 'Failed to post project.', error: error.message });
   }
 };
@@ -76,7 +76,6 @@ const AdminExistingPost = async (req, res) => {
     const projects = await Project.find({ createdBy: req.admin.adminId });
     res.status(200).json({ success: true, projects });
   } catch (error) {
-    console.error('AdminExistingPost error:', error);
     res.status(500).json({ success: false, msg: 'Failed to fetch projects.', error: error.message });
   }
 };
@@ -95,7 +94,6 @@ const AdminModifyExistingPost = async (req, res) => {
       GithubRespoLink,
       LiveDemoURL,
       Status,
-      ThumbnailImage,
       TechnologiesUsed,
       Features
     } = req.body;
@@ -106,21 +104,57 @@ const AdminModifyExistingPost = async (req, res) => {
       return res.status(404).json({ success: false, msg: 'Project not found or unauthorized.' });
     }
 
+    // Handle thumbnail upload if a new file is provided
+    let thumbnailUrl = project.ThumbnailImage; // Keep existing image by default
+    if (req.file) {
+      const { uploadImageToAppwrite, deleteImageFromAppwrite, extractFileIdFromUrl } = require('./upload.Controller');
+      try {
+        // First, try to delete the old image if it exists
+        if (project.ThumbnailImage) {
+          const oldFileId = extractFileIdFromUrl(project.ThumbnailImage);
+          if (oldFileId) {
+            try {
+              await deleteImageFromAppwrite(oldFileId);
+            } catch (deleteError) {
+              // Continue with upload even if delete fails
+            }
+          }
+        }
+        
+        // Upload the new image
+        const appwriteResult = await uploadImageToAppwrite(req.file);
+        thumbnailUrl = appwriteResult?.$id
+          ? `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.APPWRITE_BUCKET_ID}/files/${appwriteResult.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`
+          : project.ThumbnailImage; // Keep existing if upload fails
+      } catch (err) {
+        // Don't return error, just keep existing image
+      }
+    }
+
+    // Parse arrays if sent as JSON strings
+    let technologies = TechnologiesUsed;
+    let features = Features;
+    if (typeof technologies === 'string') {
+      try { technologies = JSON.parse(technologies); } catch {}
+    }
+    if (typeof features === 'string') {
+      try { features = JSON.parse(features); } catch {}
+    }
+
     // Update fields if provided
     if (ProjectTitle !== undefined) project.ProjectTitle = ProjectTitle;
     if (Description !== undefined) project.Description = Description;
     if (GithubRespoLink !== undefined) project.GithubRespoLink = GithubRespoLink;
     if (LiveDemoURL !== undefined) project.LiveDemoURL = LiveDemoURL;
     if (Status !== undefined) project.Status = Status;
-    if (ThumbnailImage !== undefined) project.ThumbnailImage = ThumbnailImage;
-    if (TechnologiesUsed !== undefined) project.TechnologiesUsed = typeof TechnologiesUsed === 'string' ? JSON.parse(TechnologiesUsed) : TechnologiesUsed;
-    if (Features !== undefined) project.Features = typeof Features === 'string' ? JSON.parse(Features) : Features;
+    project.ThumbnailImage = thumbnailUrl; // Always update with either new or existing URL
+    if (technologies !== undefined) project.TechnologiesUsed = technologies;
+    if (features !== undefined) project.Features = features;
 
     await project.save();
 
     res.status(200).json({ success: true, msg: 'Project updated successfully.', project });
   } catch (error) {
-    console.error('AdminModifyExistingPost error:', error);
     res.status(500).json({ success: false, msg: 'Failed to update project.', error: error.message });
   }
 };
@@ -128,16 +162,44 @@ const AdminModifyExistingPost = async (req, res) => {
 // Admin can delete an existing project
 const AdminDeletePost = async (req, res) => {
   try {
+    console.log('Delete request received for project:', req.params.projectId);
+    
     if (!req.admin) {
+      console.log('Unauthorized delete attempt');
       return res.status(401).json({ success: false, msg: 'Unauthorized' });
     }
 
     const { projectId } = req.params;
-    // Find and delete the project if it belongs to the admin
-    const deletedProject = await Project.findOneAndDelete({ _id: projectId, createdBy: req.admin.adminId });
-    if (!deletedProject) {
+    console.log('Admin ID:', req.admin.adminId, 'Project ID:', projectId);
+    
+    // First find the project to get the image info
+    const project = await Project.findOne({ _id: projectId, createdBy: req.admin.adminId });
+    if (!project) {
+      console.log('Project not found or unauthorized');
       return res.status(404).json({ success: false, msg: 'Project not found or unauthorized.' });
     }
+    
+    console.log('Project found:', project.ProjectTitle);
+    
+    // Delete the associated image from Appwrite if it exists
+    if (project.ThumbnailImage) {
+      const { deleteImageFromAppwrite, extractFileIdFromUrl } = require('./upload.Controller');
+      const fileId = extractFileIdFromUrl(project.ThumbnailImage);
+      console.log('Extracted file ID:', fileId);
+      if (fileId) {
+        try {
+          await deleteImageFromAppwrite(fileId);
+          console.log('Image deleted successfully from Appwrite');
+        } catch (deleteError) {
+          console.error('Failed to delete image from Appwrite:', deleteError.message);
+          // Continue with project deletion even if image deletion fails
+        }
+      }
+    }
+    
+    // Now delete the project
+    const deletedProject = await Project.findOneAndDelete({ _id: projectId, createdBy: req.admin.adminId });
+    console.log('Project deleted from database:', deletedProject ? 'Success' : 'Failed');
 
     res.status(200).json({ success: true, msg: 'Project deleted successfully.', project: deletedProject });
   } catch (error) {

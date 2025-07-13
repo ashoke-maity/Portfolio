@@ -8,12 +8,10 @@ function ProjectImage({ src, alt, className }) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const handleImageError = () => {
-    console.error('Failed to load image:', src);
     setImageError(true);
   };
 
   const handleImageLoad = () => {
-    console.log('Image loaded successfully:', src);
     setImageLoaded(true);
   };
 
@@ -55,7 +53,6 @@ function StatusDropdown({ project, onStatusChange }) {
     try {
       await onStatusChange(project._id, newStatus);
     } catch (error) {
-      console.error('Failed to update status:', error);
     } finally {
       setIsUpdating(false);
       setIsOpen(false);
@@ -224,6 +221,8 @@ function ProjectManagement({
   setFeatureInput,
   editingProject, 
   setEditingProject,
+  editForm,
+  setEditForm,
   handleSubmitProject, 
   handleAddTechnology, 
   handleRemoveTechnology, 
@@ -854,7 +853,7 @@ function Admin() {
     }
   };
 
-  const handleUpdateProject = async (projectId, updatedData) => {
+  const handleUpdateProject = async (projectId, updatedData, thumbnailFile = null) => {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
@@ -864,7 +863,34 @@ function Admin() {
         return
       }
 
-      const response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, updatedData)
+      let response;
+      
+      if (thumbnailFile) {
+        // If there's a file, use FormData
+        const formData = new FormData()
+        formData.append('ProjectTitle', updatedData.ProjectTitle)
+        formData.append('Description', updatedData.Description)
+        formData.append('GithubRespoLink', updatedData.GithubRespoLink || '')
+        formData.append('LiveDemoURL', updatedData.LiveDemoURL || '')
+        formData.append('Status', updatedData.Status)
+        formData.append('TechnologiesUsed', JSON.stringify(updatedData.TechnologiesUsed))
+        formData.append('Features', JSON.stringify(updatedData.Features))
+        formData.append('thumbnail', thumbnailFile)
+
+        response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      } else {
+        // If no file, send JSON
+        response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, updatedData, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      }
 
       if (response.data.success) {
         // Refresh projects list
@@ -876,7 +902,6 @@ function Admin() {
         setError(response.data.msg || 'Failed to update project')
       }
     } catch (error) {
-      console.error('Error updating project:', error)
       setError(error.response?.data?.msg || 'Failed to update project')
     } finally {
       setLoading(false)
@@ -897,17 +922,26 @@ function Admin() {
         return
       }
 
-      const response = await axios.delete(`${ADMIN_ROUTE}/admin/deletepost/${id}`)
+      const response = await axios.delete(`${ADMIN_ROUTE}/admin/deletepost/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      console.log('Delete response:', response.data)
 
       if (response.data.success) {
         // Refresh projects list
         fetchProjects()
         setError('')
+        console.log('Project deleted successfully')
       } else {
+        console.error('Delete failed:', response.data.msg)
         setError(response.data.msg || 'Failed to delete project')
       }
     } catch (error) {
-      console.error('Error deleting project:', error)
+      console.error('Delete error:', error)
+      console.error('Response data:', error.response?.data)
       setError(error.response?.data?.msg || 'Failed to delete project')
     } finally {
       setLoading(false)
@@ -935,7 +969,6 @@ function Admin() {
         setError(response.data.msg || 'Failed to update project status')
       }
     } catch (error) {
-      console.error('Error updating project status:', error)
       setError(error.response?.data?.msg || 'Failed to update project status')
     }
   }
@@ -1055,6 +1088,8 @@ function Admin() {
               setFeatureInput={setFeatureInput}
               editingProject={editingProject}
               setEditingProject={setEditingProject}
+              editForm={editForm}
+              setEditForm={setEditForm}
               handleSubmitProject={handleSubmitProject}
               handleAddTechnology={handleAddTechnology}
               handleRemoveTechnology={handleRemoveTechnology}
@@ -1069,7 +1104,6 @@ function Admin() {
       </div>
     )
   } catch (error) {
-    console.error('Critical error in Admin component:', error)
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -1090,18 +1124,19 @@ function Admin() {
 
 function EditProjectModal({ project, loading, onClose, onUpdate }) {
   const [form, setForm] = useState(() => ({
-    title: project.title || '',
-    description: project.description || '',
-    imageUrl: project.imageUrl || '',
-    githubUrl: project.githubUrl || '',
-    liveUrl: project.liveUrl || '',
-    status: project.status || 'Ongoing',
-    technologies: Array.isArray(project.technologies) ? [...project.technologies] : [],
-    features: Array.isArray(project.features) ? [...project.features] : [],
+    title: project.ProjectTitle || project.title || '',
+    description: project.Description || project.description || '',
+    imageUrl: project.ThumbnailImage || project.imageUrl || '',
+    githubUrl: project.GithubRespoLink || project.githubUrl || '',
+    liveUrl: project.LiveDemoURL || project.liveUrl || '',
+    status: project.Status || project.status || 'Ongoing',
+    technologies: Array.isArray(project.TechnologiesUsed) ? [...project.TechnologiesUsed] : (Array.isArray(project.technologies) ? [...project.technologies] : []),
+    features: Array.isArray(project.Features) ? [...project.Features] : (Array.isArray(project.features) ? [...project.features] : []),
   }));
   const [techInput, setTechInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
   const [error, setError] = useState('');
+  const [thumbnailFile, setThumbnailFile] = useState(null);
 
   const handleAddTechnology = () => {
     if (techInput.trim() && !form.technologies.includes(techInput.trim())) {
@@ -1124,6 +1159,7 @@ function EditProjectModal({ project, loading, onClose, onUpdate }) {
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setThumbnailFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setForm(f => ({ ...f, imageUrl: e.target.result }));
@@ -1138,7 +1174,25 @@ function EditProjectModal({ project, loading, onClose, onUpdate }) {
       return;
     }
     setError('');
-    onUpdate(project._id, { ...form });
+    
+    // Transform form data to match backend field names
+    const updatedData = {
+      ProjectTitle: form.title,
+      Description: form.description,
+      GithubRespoLink: form.githubUrl,
+      LiveDemoURL: form.liveUrl,
+      Status: form.status,
+      TechnologiesUsed: form.technologies,
+      Features: form.features
+    };
+    
+    // Don't include ThumbnailImage in updatedData if we have a file
+    // The file will be handled separately
+    if (!thumbnailFile) {
+      updatedData.ThumbnailImage = form.imageUrl;
+    }
+    
+    onUpdate(project._id, updatedData, thumbnailFile);
   };
 
   return (
