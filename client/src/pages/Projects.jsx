@@ -83,7 +83,7 @@ function Projects() {
             <button
               onClick={() => setFilter('Ongoing')}
               className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                filter === 'ongoing'
+                filter === 'Ongoing'
                   ? 'bg-yellow-600 text-white'
                   : 'text-gray-300 hover:text-yellow-400'
               }`}
@@ -131,25 +131,6 @@ function Projects() {
             </p>
           </div>
         )}
-
-        {/* CTA Section */}
-        <div className="mt-20 text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Have a project in mind?
-          </h2>
-          <p className="text-lg text-gray-400 mb-8">
-            I'm always interested in new opportunities and exciting projects.
-          </p>
-          <a
-            href="/contact"
-            className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
-          >
-            Let's Work Together
-            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
-        </div>
       </div>
     </div>
   )
