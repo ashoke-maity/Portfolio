@@ -83,7 +83,7 @@ function Projects() {
             <button
               onClick={() => setFilter('Ongoing')}
               className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                filter === 'ongoing'
+                filter === 'Ongoing'
                   ? 'bg-yellow-600 text-white'
                   : 'text-gray-300 hover:text-yellow-400'
               }`}
