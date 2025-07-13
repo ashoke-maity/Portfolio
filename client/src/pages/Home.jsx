@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import profile_pic from '../assets/profile_pic.png'
 
 function Home() {
   return (
@@ -12,7 +13,7 @@ function Home() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
-                  Hi, I'm <span className="text-blue-400">Ashoke</span>
+                  Hi, I'm <span className="text-blue-400">Ashoke Maity</span>
                 </h1>
                 <h2 className="text-2xl lg:text-3xl font-semibold text-gray-300">
                   Full Stack Developer
@@ -57,9 +58,8 @@ function Home() {
               {/* Profile Picture */}
               <div className="relative mb-8">
                 <div className="w-64 h-64 lg:w-80 lg:h-80 rounded-full overflow-hidden border-4 border-blue-500 shadow-2xl">
-                  {/* Replace the src with your actual profile picture */}
                   <img
-                    src="client/public/profile_pic.png" // Update this path to your actual image
+                    src={profile_pic}
                     alt="Ashoke - Full Stack Developer"
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -70,7 +70,7 @@ function Home() {
                   />
                   {/* Fallback placeholder */}
                   <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-6xl font-bold" style={{display: 'none'}}>
-                    YN
+                    AM
                   </div>
                 </div>
                 
