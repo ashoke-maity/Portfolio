@@ -58,7 +58,6 @@ function Home() {
               {/* Profile Picture */}
               <div className="relative mb-8">
                 <div className="w-64 h-64 lg:w-80 lg:h-80 rounded-full overflow-hidden border-4 border-blue-500 shadow-2xl">
-                  {/* Replace the src with your actual profile picture */}
                   <img
                     src={profile_pic}
                     alt="Ashoke - Full Stack Developer"
