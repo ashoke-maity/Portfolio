@@ -2,17 +2,17 @@ const dotenv = require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require("cors");
-const corsOptions = require('./middlewares/CORS.Middleware');
+const corsOptions = require('../middlewares/CORS.Middleware');
 
 // router imports
-const AdminRouter = require('./routes/admin.Route');
-const AdminPostRouter = require('./routes/adminPost.Route');
-const UserProjectFetchRouter = require('./routes/UserFetchingAdmin.Route');
-const uploadRouter = require('./routes/upload.Route');
-const userImageRouter = require('./routes/userImage.Route');
+const AdminRouter = require('../routes/admin.Route');
+const AdminPostRouter = require('../routes/adminPost.Route');
+const UserProjectFetchRouter = require('../routes/UserFetchingAdmin.Route');
+const uploadRouter = require('../routes/upload.Route');
+const userImageRouter = require('../routes/userImage.Route');
 
 // database connection
-const dbConnect = require('./configs/db');
+const dbConnect = require('../configs/db');
 dbConnect();
 
 // middlware
@@ -27,7 +27,4 @@ app.use(process.env.USER_ROUTE, UserProjectFetchRouter);
 app.use(process.env.ADMIN_ROUTE, uploadRouter);
 app.use(process.env.USER_ROUTE, userImageRouter);
 
-// server start
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT} 🚀`);
-});
+module.exports = app;
