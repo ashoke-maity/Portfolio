@@ -863,34 +863,27 @@ function Admin() {
         return
       }
 
-      let response;
+      // Always use FormData for consistency with the backend route
+      const formData = new FormData()
+      formData.append('ProjectTitle', updatedData.ProjectTitle)
+      formData.append('Description', updatedData.Description)
+      formData.append('GithubRespoLink', updatedData.GithubRespoLink || '')
+      formData.append('LiveDemoURL', updatedData.LiveDemoURL || '')
+      formData.append('Status', updatedData.Status)
+      formData.append('TechnologiesUsed', JSON.stringify(updatedData.TechnologiesUsed))
+      formData.append('Features', JSON.stringify(updatedData.Features))
       
+      // Add thumbnail file if provided
       if (thumbnailFile) {
-        // If there's a file, use FormData
-        const formData = new FormData()
-        formData.append('ProjectTitle', updatedData.ProjectTitle)
-        formData.append('Description', updatedData.Description)
-        formData.append('GithubRespoLink', updatedData.GithubRespoLink || '')
-        formData.append('LiveDemoURL', updatedData.LiveDemoURL || '')
-        formData.append('Status', updatedData.Status)
-        formData.append('TechnologiesUsed', JSON.stringify(updatedData.TechnologiesUsed))
-        formData.append('Features', JSON.stringify(updatedData.Features))
         formData.append('thumbnail', thumbnailFile)
-
-        response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          }
-        })
-      } else {
-        // If no file, send JSON
-        response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, updatedData, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
       }
+
+      const response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      })
 
       if (response.data.success) {
         // Refresh projects list
@@ -957,8 +950,15 @@ function Admin() {
         return
       }
 
-      const response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, {
-        Status: newStatus
+      // Use FormData for consistency with the backend route
+      const formData = new FormData();
+      formData.append('Status', newStatus);
+      
+      const response = await axios.put(`${ADMIN_ROUTE}/admin/modifyexistingpost/${projectId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       if (response.data.success) {
