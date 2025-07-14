@@ -9,7 +9,7 @@ const projectSchema = new mongoose.Schema({
         type:String,
         required:true,
         enum:['Ongoing','Completed'],
-        default:'Completed'
+        default:'Ongoing'
     },
     Description:{
         type:String,
@@ -21,7 +21,7 @@ const projectSchema = new mongoose.Schema({
     },
     LiveDemoURL:{
         type:String,
-        required:true,
+        required:false,
     },
     ThumbnailImage:{
         type:String,
