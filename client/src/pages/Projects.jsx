@@ -146,14 +146,7 @@ function Projects() {
           }
         }
         
-        @keyframes typewriter {
-          from {
-            width: 0;
-          }
-          to {
-            width: 100%;
-          }
-        }
+
         
         @keyframes float {
           0%, 100% {
@@ -259,12 +252,7 @@ function Projects() {
           background: rgba(0,0,0,0.1);
         }
         
-        .typewriter-text {
-          overflow: hidden;
-          border-right: 2px solid;
-          white-space: nowrap;
-          animation: typewriter 2s steps(20) infinite alternate;
-        }
+
         
         .floating {
           animation: float 3s ease-in-out infinite;
@@ -428,7 +416,7 @@ function Projects() {
                         
                         {/* Handwritten Style Title */}
                         <div className="text-center">
-                          <h3 className="text-white font-bold text-lg mb-2 typewriter-text" style={{
+                          <h3 className="text-white font-bold text-lg mb-2" style={{
                             fontFamily: 'Courier New, monospace'
                           }}>
                             {title}
