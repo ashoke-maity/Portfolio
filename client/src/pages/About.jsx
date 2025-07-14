@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import profile_pic from '../assets/profile_pic.png'
+import ethicalHackingCert from '../assets/Ethical hacking certificate.png'
 
 function About() {
   const [selectedCertificate, setSelectedCertificate] = useState(null)
@@ -17,6 +18,9 @@ function About() {
     
     // Smooth page load animation
     setTimeout(() => setIsLoaded(true), 100)
+    
+    // Debug: Log the imported image
+    // console.log('Imported certificate image:', ethicalHackingCert)
 
     // Intersection Observer for scroll animations - triggers every time
     const observer = new IntersectionObserver(
@@ -93,8 +97,8 @@ function About() {
       title: 'Ethical Hacking Certification Course',
       company: 'NIELIT Haridwar',
       period: 'August 2022 - September 2022',
-      description: 'Building web applications using modern technologies. Working with clients to deliver high-quality, scalable solutions.',
-      image: '/certificate-placeholder.jpg' // Add your certificate image path here
+      description: 'Comprehensive course covering ethical hacking fundamentals, penetration testing, vulnerability assessment, and cybersecurity best practices.',
+      image: ethicalHackingCert,
     }
   ]
 
@@ -348,23 +352,19 @@ function About() {
                   <div className="lg:col-span-1">
                     <div className="relative group">
                       <img 
-                        src={cert.image || '/certificate-placeholder.jpg'} 
-                        alt={cert.title}
-                        className="w-full h-64 object-cover rounded-lg border border-gray-600 cursor-pointer hover:border-blue-400 transition-all duration-300 group-hover:scale-105"
+                        src={cert.image} 
+                        // alt={cert.title}
+                        className="w-full h-64 object-contain bg-white rounded-lg border border-gray-600 cursor-pointer hover:border-blue-400 transition-all duration-300 group-hover:scale-105"
                         onClick={() => setSelectedCertificate(cert)}
+                        onLoad={(e) => {
+                          console.log('Certificate image loaded successfully:', e.target.src)
+                        }}
                         onError={(e) => {
+                          console.error('Error loading certificate image:', e.target.src)
                           e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300' fill='%23374151'%3E%3Crect width='400' height='300' fill='%23374151'/%3E%3Cpath d='M200 120c-22.091 0-40 17.909-40 40s17.909 40 40 40 40-17.909 40-40-17.909-40-40-40zm0 60c-11.046 0-20-8.954-20-20s8.954-20 20-20 20 8.954 20 20-8.954 20-20 20z' fill='%236B7280'/%3E%3Cpath d='M160 200h80v20h-80z' fill='%236B7280'/%3E%3Cpath d='M170 230h60v10h-60z' fill='%236B7280'/%3E%3C/svg%3E"
                         }}
                       />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-3 animate-glow">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      
                     </div>
                     <p className="text-center text-gray-400 text-sm mt-2">Click to view larger</p>
                   </div>
