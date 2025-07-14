@@ -21,7 +21,6 @@ const projectSchema = new mongoose.Schema({
     },
     LiveDemoURL:{
         type:String,
-        required:false,
     },
     ThumbnailImage:{
         type:String,
