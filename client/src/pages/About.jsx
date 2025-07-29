@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import profile_pic from '../assets/profile_pic.png'
-import ethicalHackingCert from '../assets/Ethical hacking certificate.png'
+import React, { useState, useEffect } from 'react';
+import profile_pic from '../assets/profile_pic.png';
+import ethicalHackingCert from '../assets/Ethical hacking certificate.png';
+import deloitteJobSimulation from '../assets/deloitte job Simulation.png';
+import HackerRankfrontendCertificate from '../assets/Frontend hacker rank certificate.png';
 
 function About() {
   const [selectedCertificate, setSelectedCertificate] = useState(null)
@@ -19,10 +21,6 @@ function About() {
     // Smooth page load animation
     setTimeout(() => setIsLoaded(true), 100)
     
-    // Debug: Log the imported image
-    // console.log('Imported certificate image:', ethicalHackingCert)
-
-    // Intersection Observer for scroll animations - triggers every time
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -99,6 +97,20 @@ function About() {
       period: 'August 2022 - September 2022',
       description: 'Comprehensive course covering ethical hacking fundamentals, penetration testing, vulnerability assessment, and cybersecurity best practices.',
       image: ethicalHackingCert,
+    },
+    {
+      title: 'Deloitte Data Analytics Job Simulation',
+      company: 'Forage',
+      period: 'July 2025',
+      description: 'Comprehensive course covering data analytics concepts, tools, and techniques used in the industry.',
+      image: deloitteJobSimulation,
+    },
+    {
+      title: 'Frontend Development Certification',
+      company: 'HackerRank',
+      period: 'July 2025',
+      description: 'Comprehensive course covering frontend development concepts, tools, and techniques used in the industry.',
+      image: HackerRankfrontendCertificate,
     }
   ]
 
