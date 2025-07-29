@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import profile_pic from '../assets/profile_pic.png';
-import ethicalHackingCert from '../assets/Ethical hacking certificate.png';
-import deloitteJobSimulation from '../assets/deloitte job simulation.png';
-import HackerRankfrontendCertificate from '../assets/Frontend hacker rank certificate.png';
+import ethicalHackingCert from '../assets/Ethical_hacking_certificate.png';
+import deloitteJobSimulation from '../assets/deloitte_job_simulation.png';
+import HackerRankfrontendCertificate from '../assets/Frontend_hacker_rank_certificate.png';
 
 function About() {
   const [selectedCertificate, setSelectedCertificate] = useState(null)
