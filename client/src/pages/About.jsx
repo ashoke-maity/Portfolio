@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import profile_pic from '../assets/profile_pic.png';
 import ethicalHackingCert from '../assets/Ethical hacking certificate.png';
-import deloitteJobSimulation from '../assets/deloitte job Simulation.png';
+import deloitteJobSimulation from '../assets/deloitte job simulation.png';
 import HackerRankfrontendCertificate from '../assets/Frontend hacker rank certificate.png';
 
 function About() {
